@@ -86,3 +86,53 @@ def build_features(matches: pd.DataFrame) -> pd.DataFrame:
         side.columns = [f"{prefix}_{c}" for c in side.columns]
         out = out.join(side)
     return out
+
+
+def latest_team_state(matches: pd.DataFrame) -> pd.DataFrame:
+    """Each team's CURRENT form — for predicting a hypothetical next fixture.
+
+    Same windows as build_features, but ending at the team's most recent
+    match: for a future fixture, "the previous 5 matches" are simply the
+    last 5 played, so no shift is needed. Also returns the team's last five
+    results as a W/D/L string for display.
+    """
+    long = _team_match_long(matches)
+    states = {}
+    for team, g in long.groupby("team"):
+        g = g.sort_values("date")
+
+        def tail_mean(frame, col, window, min_periods):
+            s = frame[col].tail(window)
+            return s.mean() if len(s) >= min_periods else float("nan")
+
+        states[team] = {
+            "ppg_last5": tail_mean(g, "points", 5, 3),
+            "ppg_last38": tail_mean(g, "points", 38, 10),
+            "gf_last5": tail_mean(g, "gf", 5, 3),
+            "ga_last5": tail_mean(g, "ga", 5, 3),
+            "sot_last5": tail_mean(g, "sot", 5, 3),
+            "ppg_home_last5": tail_mean(g[g["venue"] == "H"], "points", 5, 3),
+            "ppg_away_last5": tail_mean(g[g["venue"] == "A"], "points", 5, 3),
+            "last_match": g["date"].max(),
+            "last5_results": "".join(
+                {3: "W", 1: "D", 0: "L"}[p] for p in g["points"].tail(5)
+            ),
+        }
+    return pd.DataFrame(states).T
+
+
+def fixture_features(home_state: pd.Series, away_state: pd.Series, rest_days: float = 7.0) -> pd.DataFrame:
+    """Assemble one model-ready feature row for a hypothetical fixture."""
+    row = {}
+    for prefix, state, venue_col in [
+        ("home", home_state, "ppg_home_last5"),
+        ("away", away_state, "ppg_away_last5"),
+    ]:
+        row[f"{prefix}_ppg_last5"] = state["ppg_last5"]
+        row[f"{prefix}_ppg_last38"] = state["ppg_last38"]
+        row[f"{prefix}_gf_last5"] = state["gf_last5"]
+        row[f"{prefix}_ga_last5"] = state["ga_last5"]
+        row[f"{prefix}_sot_last5"] = state["sot_last5"]
+        row[f"{prefix}_ppg_venue_last5"] = state[venue_col]
+        row[f"{prefix}_rest_days"] = rest_days
+    return pd.DataFrame([row])[FEATURE_COLS]
