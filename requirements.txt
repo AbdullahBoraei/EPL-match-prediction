@@ -1,0 +1,8 @@
+# Requires Python 3.10+ (developed on 3.12)
+pandas>=3.0
+scikit-learn>=1.9
+matplotlib>=3.9
+seaborn>=0.13
+streamlit>=1.50
+jupyter
+joblib
