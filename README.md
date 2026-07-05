@@ -106,6 +106,12 @@ models/                                     trained model artifact
 
 To reproduce from scratch: run the three notebooks in order (each is self-contained and re-downloads/re-builds what it needs).
 
+## Part 2: Monte Carlo season simulation (C++)
+
+The probabilities this model produces feed a second project: [epl-monte-carlo](https://github.com/AbdullahBoraei/epl-monte-carlo), a multithreaded C++ engine that simulates the full season millions of times to turn per-match probabilities into season-level answers — P(title), P(top 4), P(relegation), the expected final table with uncertainty, and what-if analysis ("how much does one result swing the title race?").
+
+The bridge is `scripts/export_fixtures.py`, which writes one season's fixtures with model probabilities to `data/exports/` — Python owns the modeling, C++ owns the heavy simulation (1M+ simulated seasons/sec).
+
 ---
 
 *Data: [football-data.co.uk](https://www.football-data.co.uk) (free historical data). Educational project — not betting advice.*
