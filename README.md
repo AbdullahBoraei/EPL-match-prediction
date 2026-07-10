@@ -4,7 +4,7 @@ I predict Premier League match outcomes from 11 seasons of data and measure
 the gap between a weekend model and Bet365. The project covers data
 collection, cleaning, exploratory analysis, leakage-free feature engineering,
 model selection, evaluation beyond accuracy, and an interactive
-[Streamlit app](#(https://epl-match-prediction-boraei.streamlit.app/)).
+[Streamlit app](https://epl-match-prediction-boraei.streamlit.app/).
 
 ## TL;DR
 
